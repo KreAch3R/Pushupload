@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#     Copyright (C) 2016 KreAch3R, Krexus
+#     Copyright (C) 2016 KreAch3R
 #
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
@@ -15,19 +15,18 @@
 #     limitations under the License.
 
 
-# Version: 5
+# Version: 5.1
 # dependencies:
-# plowshare: https://github.com/mcrapet/plowshare
-#            sudo apt-get install plowshare4
 # pushbullet-bash: https://github.com/Red5d/pushbullet-bash
 # ncftp: sudo apt-get install ncftp
 # xmlstarlet: sudo apt-get install xmlstarlet
 # Usage: pushbullet [channel]
-#        pushupload [afh/basket] (zippy is default)
+#        pushupload [afh/basket]
 
-# Variables
-pushbullet=$(gettop)/vendor/krexus/utils/pushbullet.sh
-basketmd5=$(gettop)/vendor/krexus/utils/basketmd5.sh
+#Variables
+currentdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushbullet=$currentdir/pushbullet
+basketmd5=$currentdir/basketmd5
 
 function loadvariables() {
     # Check the $OUT directory for .zip files and grab the latest
@@ -45,20 +44,15 @@ function prepare() {
 
 function pushbullet() {
     loadvariables
-    if [ "$1" == channel ]; then
-	$pushbullet push krexus link "OTAs available!" "$(date +"%d/%m/%y") builds are out! \n\nTap to download! \nChangelog: krexus.github.io/#changelog" "$link"
-    else
+    #if [ "$1" == channel ]; then
+	#pushbullet push krexus link "OTAs available!" "$(date +"%d/%m/%y") builds are out! \n\nTap to download! \nChangelog: krexus.github.io/#changelog" "$link"
+    #else
 	$pushbullet push all note "$TARGET_DEVICE: complete!" "$otapackage compiled successfully."
-    fi
+    #fi
 }
 
 function pushupload() {
-# Quoting the variable because it may be empty
-    if [[ $# -eq 0 ]]; then
-    	pushbullet && zippy-upload
-    else
-    	pushbullet && $1-upload
-    fi
+    pushbullet && $1-upload
 }
 
 function ftp-upload() {
@@ -116,12 +110,4 @@ function basket-upload() {
     service="basket"
     dir="/Krexus/$TARGET_DEVICE"
     ftp-upload
-}
-
-function zippy-upload() {
-    printmessage="Zippyshare..."
-    prepare
-    exec 5>&1
-    local upload_url=$(plowup zippyshare --max-rate 90k $otalocation | tee >(cat - >&5))
-    $pushbullet push all link "$TARGET_DEVICE: upload complete!" "packagename: $otapackage" $upload_url
 }
